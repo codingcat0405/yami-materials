@@ -1,21 +1,50 @@
-import {Button, Col, DatePicker, Form, Input, Modal, Row, Upload} from "antd";
+import {Button, Col, DatePicker, Flex, Form, Input, Modal, Row, Upload} from "antd";
 import {imageToBase64} from "../utils.ts";
 import toast from "react-hot-toast";
 import {useState} from "react";
+import yamiMaterials from "../apis/yami-materials.ts";
 
-const AddMaterialModal = ({open, setOpen, onFinish}) => {
+const AddMaterialModal = ({open, setOpen, onFinish}: any) => {
   const [loading, setLoading] = useState(false);
-
-  const handleCreateMaterial = async (values) => {
-    console.log(values);
-    try  {
-      if(values.files)  {
+  const [form] = Form.useForm();
+  const handleCreateMaterial = async (values: any) => {
+    try {
+      setLoading(true);
+      if (!values.images) {
         throw new Error('Chưa chọn ảnh vật tư');
       }
-      setLoading(true);
-    }catch (err: any) {
+      const uploadedUrls = [];
+      for (const file of values.images.fileList) {
+        const originalFile = file.originFileObj;
+        //rename file
+        const fileExtension = originalFile.name.split('.').pop();
+        const newFileName = `${values.code}-${Date.now()}.${fileExtension}`;
+        const presignedUrlResp = await yamiMaterials.getPresignedUrl(newFileName);
+        const resp = await fetch(presignedUrlResp.uploadUrl, {
+          method: 'PUT',
+          body: originalFile,
+        });
+        if (!resp.ok) {
+          throw new Error('Upload ảnh thất bại');
+        }
+        uploadedUrls.push(presignedUrlResp.publicUrl);
+      }
+      const data = {
+        ...values,
+        entryDate: values.entryDate.format('YYYY-MM-DD'),
+        images: uploadedUrls.join(','),
+      };
+      console.log(data);
+      await yamiMaterials.createMaterial(data);
+      await onFinish()
+      form.resetFields();
+      toast.success('Thêm vật tư thành công');
+      setOpen(false);
+    } catch (err: any) {
       console.log(err);
       toast.error(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -26,8 +55,10 @@ const AddMaterialModal = ({open, setOpen, onFinish}) => {
       width={800}
       onCancel={() => setOpen(false)}
       onOk={() => setOpen(false)}
+      footer={[]}
     >
       <Form
+        disabled={loading}
         name="createMaterial"
         layout='vertical'
         onFinish={handleCreateMaterial}
@@ -141,9 +172,10 @@ const AddMaterialModal = ({open, setOpen, onFinish}) => {
             <Button>Click to Upload</Button>
           </Upload>
         </Form.Item>
-        <div>
-          <Button type='primary' htmlType='submit'>Thêm</Button>
-        </div>
+        <Flex justify='end'>
+          <Button type='primary' htmlType='submit' loading={loading}>Thêm</Button>
+          <Button onClick={() => setOpen(false)} style={{marginLeft: 10}}>Hủy</Button>
+        </Flex>
       </Form>
 
 

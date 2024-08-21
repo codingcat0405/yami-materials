@@ -16,6 +16,9 @@ const yamiMaterials = {
   deleteMaterial: async (id: string): Promise<any> => {
     return await axiosClient.delete(`/materials/${id}`);
   },
+  getPresignedUrl: async (fileName: string): Promise<any> => {
+    return await axiosClient.get(`/upload/presigned-url?file=${fileName}`);
+  }
 
 }
 
