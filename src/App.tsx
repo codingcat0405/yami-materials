@@ -5,6 +5,7 @@ import Login from "./pages/Login.tsx";
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
 import {Toaster} from "react-hot-toast";
 import './App.css';
+import MaterialDetail from "./pages/MaterialDetail.tsx";
 
 const queryClient = new QueryClient();
 const App = () => {
@@ -17,6 +18,7 @@ const App = () => {
             <Route path="/" element={<Material/>}/>
           </Route>
           <Route path="/login" element={<Login/>}/>
+          <Route path="/material/:stampCode" element={<MaterialDetail/>}/>
           <Route path="*" element={<div>404</div>}/>
         </Routes>
       </BrowserRouter>

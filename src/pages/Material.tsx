@@ -1,17 +1,20 @@
 import {useEffect, useState} from "react";
 import {ACCESS_TOKEN_KEY} from "../constants.ts";
 import {useNavigate} from "react-router-dom";
-import {Flex, Table, Input, Button, Space, Image, DatePicker} from "antd";
+import {Flex, Table, Input, Button, Space, Image, DatePicker, QRCode} from "antd";
 import yamiMaterials from "../apis/yami-materials.ts";
 import dayjs from "dayjs";
 import EditMaterialModal from "../components/EditMaterialModal.tsx";
 import toast from "react-hot-toast";
+import QrModal from "../components/QrModal.tsx";
 
 const Material = () => {
   const [loading, setLoading] = useState(false);
   const [listDelete, setListDelete] = useState<number[]>([]);
   const [openEditImageModal, setOpenEditImageModal] = useState(false);
   const [toEditMaterial, setToEditMaterial] = useState<any>(null);
+  const [openQrModal, setOpenQrModal] = useState(false);
+  const [qrValue, setQrValue] = useState('');
   const navigate = useNavigate();
   useEffect(() => {
     const isLoggedIn = !!localStorage.getItem(ACCESS_TOKEN_KEY);
@@ -99,6 +102,24 @@ const Material = () => {
     }
   }
   const columns = [
+    {
+      title: 'QR',
+      dataIndex: 'stampCode',
+      width: 150,
+      render: (stampCode: string) => {
+        return (
+          <div style={{cursor: 'pointer'}} onClick={() => {
+            setQrValue(`https://yami-materials.pages.dev/material/${stampCode}`);
+            setOpenQrModal(true);
+          }}>
+            <QRCode
+              value={`https://yami-materials.pages.dev/material/${stampCode}`}
+              size={80}
+            />
+          </div>
+        )
+      }
+    },
     {
       title: 'Mã tem',
       dataIndex: 'stampCode',
@@ -256,7 +277,6 @@ const Material = () => {
       key: '_',
       render: (_: any, record: any) => (
         <Space>
-          <Button type='primary'>QR</Button>
           <Button type='primary' danger onClick={() => {
             if (!isNaN(Number(record.key))) {
               setListDelete([...listDelete, Number(record.key)]);
@@ -323,6 +343,11 @@ const Material = () => {
         material={toEditMaterial}
         setTableData={setTableData}
         tableData={tableData}
+      />
+      <QrModal
+        open={openQrModal}
+        setOpen={setOpenQrModal}
+        value={qrValue}
       />
     </div>
   )
