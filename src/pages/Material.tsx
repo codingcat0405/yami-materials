@@ -2,13 +2,16 @@ import {useEffect, useState} from "react";
 import {ACCESS_TOKEN_KEY} from "../constants.ts";
 import {useNavigate} from "react-router-dom";
 import {Flex, Table, Input, Button, Space, Image, DatePicker} from "antd";
-import AddMaterialModal from "../components/AddMaterialModal.tsx";
-import {useQuery} from "@tanstack/react-query";
 import yamiMaterials from "../apis/yami-materials.ts";
 import dayjs from "dayjs";
+import EditMaterialModal from "../components/EditMaterialModal.tsx";
+import toast from "react-hot-toast";
 
 const Material = () => {
-  const [openAddMaterial, setOpenAddMaterial] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [listDelete, setListDelete] = useState<number[]>([]);
+  const [openEditImageModal, setOpenEditImageModal] = useState(false);
+  const [toEditMaterial, setToEditMaterial] = useState<any>(null);
   const navigate = useNavigate();
   useEffect(() => {
     const isLoggedIn = !!localStorage.getItem(ACCESS_TOKEN_KEY);
@@ -16,24 +19,32 @@ const Material = () => {
       navigate('/login');
     }
   }, []);
-
-  const {
-    data: {data: materials = [], total = 0} = {},
-    isLoading: isLoadMaterials,
-  } = useQuery({
-    queryKey: ['materials'],
-    queryFn: async () => await yamiMaterials.listMaterials(),
-  })
-  console.log(materials, total);
+  const [total, setTotal] = useState(0);
+  console.log('total', total);
   const [tableData, setTableData] = useState<any[]>([]);
+  const [isLoadMaterials, setIsLoadMaterials] = useState(false);
+  const fetchMaterials = async () => {
+    try {
+      setIsLoadMaterials(true);
+      const resp = await yamiMaterials.listMaterials();
+      console.log(resp);
+      setTableData(resp.data.map((material: any) => {
+        return {
+          ...material,
+          key: material.id,
+        }
+      }))
+      setTotal(resp.total);
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setIsLoadMaterials(false);
+    }
+  }
+
   useEffect(() => {
-    setTableData(materials.map((material: any) => {
-      return {
-        ...material,
-        key: material.id,
-      }
-    }));
-  }, [materials]);
+    fetchMaterials()
+  }, []);
 
   const handleCellChange = (value: any, key: string, dataIndex: string) => {
     const newData = [...tableData];
@@ -43,6 +54,50 @@ const Material = () => {
     setTableData(newData);
   }
 
+  const handleSaveMaterials = async () => {
+    try {
+      setLoading(true);
+      const listCreate = []
+      const listUpdate = []
+      for (const item of tableData) {
+        console.log(item);
+        if (item.key.toString().includes('new')) {
+          listCreate.push(item);
+        } else {
+          listUpdate.push(item);
+        }
+      }
+      //normalize data  //remove key field  and format date
+      const listCreateNormalized = listCreate.map((item: any) => {
+        const {key, ...rest} = item;
+        console.log({key, rest});
+        return {
+          ...rest,
+          entryDate: dayjs(rest.entryDate).format('YYYY-MM-DD'),
+        }
+      });
+      const listUpdateNormalized = listUpdate.map((item: any) => {
+        const {key, createdAt, updatedAt, deletedAt, ...rest} = item;
+        console.log({key, createdAt, updatedAt, deletedAt, rest});
+        return {
+          ...rest,
+          entryDate: dayjs(rest.entryDate).format('YYYY-MM-DD'),
+        }
+      });
+
+      await yamiMaterials.bulkCUD({
+        listCreate: listCreateNormalized,
+        listUpdate: listUpdateNormalized,
+        listDelete,
+      })
+      await fetchMaterials();
+      toast.success('Lưu thành công');
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+  }
   const columns = [
     {
       title: 'Mã tem',
@@ -169,21 +224,46 @@ const Material = () => {
       title: 'Ảnh vật  tư',
       dataIndex: 'images',
       key: 'images',
-      render: (images: string) => {
-        const imagesArr = images.split(',');
-        return imagesArr.map((image, index) => {
-          return <Image key={index} src={image} alt='ảnh vật tư' style={{width: 50, height: 50}}/>
-        })
+      render: (images: string, record: any) => {
+        const imagesArr = images.split(',').filter(x => !!x);
+        return (
+          <Space>
+            {
+              imagesArr.map((image: string, index: number) => {
+                return (
+                  <Image
+                    key={index}
+                    width={50}
+                    height={50}
+                    src={image}
+                  />
+                )
+              })
+            }
+            <Button size='small' onClick={() => {
+              setToEditMaterial(record)
+              setOpenEditImageModal(true);
+            }}>
+              {imagesArr.length > 0 ? 'Sửa' : 'Thêm'}
+            </Button>
+          </Space>
+        )
       }
     },
     {
       title: 'Hành động',
       dataIndex: '_',
       key: '_',
-      render: () => (
+      render: (_: any, record: any) => (
         <Space>
           <Button type='primary'>QR</Button>
-          <Button type='primary' danger>Xóa</Button>
+          <Button type='primary' danger onClick={() => {
+            if (!isNaN(Number(record.key))) {
+              setListDelete([...listDelete, Number(record.key)]);
+            }
+            const newData = tableData.filter((item: any) => item.key !== record.key);
+            setTableData(newData);
+          }}>Xóa</Button>
         </Space>
       )
     }
@@ -191,19 +271,10 @@ const Material = () => {
   return (
     <div>
       <Flex justify='space-between' style={{marginBottom: 20}}>
-
         <Input.Search placeholder='tìm vật tư' style={{width: 250}}/>
-        <Flex>
-          <Button
-            type='primary'
-            style={{marginRight: 10}}
-            onClick={() => setOpenAddMaterial(true)}
-          >
-            Thêm vật tư</Button>
-        </Flex>
       </Flex>
       <Table
-        loading={isLoadMaterials}
+        loading={isLoadMaterials || loading}
         columns={columns}
         dataSource={tableData}
         scroll={{x: 'max-content', y: 600}}
@@ -215,10 +286,44 @@ const Material = () => {
         pagination={false}
       />
       <Flex justify='end' style={{marginTop: 20}}>
-        <Button type='primary' style={{marginRight: 10}}>Thêm dòng</Button>
+        <Button
+          type='primary'
+          style={{marginRight: 10}}
+          onClick={() => {
+            setTableData([...tableData, {
+              key: `new-${tableData.length}`,
+              stampCode: '',
+              code: '',
+              name: '',
+              entryDate: new Date().toDateString(),
+              status: '',
+              creatorCode: '',
+              device: '',
+              unit: '',
+              images: '',
+            }])
+          }}
+        >
+          Thêm dòng
+        </Button>
+
+        <Button
+          type='primary'
+          style={{marginRight: 10}}
+          onClick={handleSaveMaterials}
+          loading={loading}
+        >
+          Lưu thay đổi
+        </Button>
       </Flex>
-      <AddMaterialModal open={openAddMaterial} setOpen={setOpenAddMaterial} onFinish={() => {
-      }}/>
+
+      <EditMaterialModal
+        open={openEditImageModal}
+        setOpen={setOpenEditImageModal}
+        material={toEditMaterial}
+        setTableData={setTableData}
+        tableData={tableData}
+      />
     </div>
   )
 }

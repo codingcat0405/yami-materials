@@ -11,13 +11,16 @@ const yamiMaterials = {
     return await axiosClient.post('/materials', data);
   },
   updateMaterial: async (id: string, data: any): Promise<any> => {
-    return await axiosClient.put(`/materials/${id}`, data);
+    return await axiosClient.post(`/materials/${id}`, data);
   },
   deleteMaterial: async (id: string): Promise<any> => {
     return await axiosClient.delete(`/materials/${id}`);
   },
   getPresignedUrl: async (fileName: string): Promise<any> => {
     return await axiosClient.get(`/upload/presigned-url?file=${fileName}`);
+  },
+  bulkCUD: async (data: any): Promise<any> =>{
+    return await axiosClient.post('/materials/bulk-cud', data);
   }
 
 }
