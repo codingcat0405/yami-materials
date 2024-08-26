@@ -35,7 +35,6 @@ const EditMaterialModal = ({open, setOpen, toEdit, onFinish}: any) => {
         for (const file of values.images.fileList) {
           if (file.thumbUrl.startsWith('https')) {
             //not base 64 =>  an  uploaded image  skip
-            console.log('exist image', file.thumbUrl);
             uploadedUrls.push(file.thumbUrl);
             continue;
           }
@@ -61,7 +60,6 @@ const EditMaterialModal = ({open, setOpen, toEdit, onFinish}: any) => {
         //when no images is uploaded, keep the old images
         images: isFileUploaded ? uploadedUrls.join(',') : values.images,
       };
-      console.log(data);
       await yamiMaterials.updateMaterial(toEdit?.id, data);
       await onFinish()
       form.resetFields();

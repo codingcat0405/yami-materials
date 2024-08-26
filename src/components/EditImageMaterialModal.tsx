@@ -28,11 +28,9 @@ const EditImageMaterialModal = ({open, setOpen, material, tableData, setTableDat
       for (const file of fileList) {
         if (file.thumbUrl.startsWith('https')) {
           //not base 64 =>  an  uploaded image  skip
-          console.log('exist image', file.thumbUrl);
           uploadedUrls.push(file.thumbUrl);
           continue;
         }
-        console.log('upload new  imagge');
         //base 64 => upload
         const originalFile = file.originFileObj;
         //rename file

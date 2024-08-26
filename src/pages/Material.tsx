@@ -1,7 +1,7 @@
 import {useEffect, useState} from "react";
 import {ACCESS_TOKEN_KEY} from "../constants.ts";
 import {useNavigate} from "react-router-dom";
-import {Flex, Table, Input, Button, Space, Image, DatePicker, QRCode} from "antd";
+import {Flex, Table, Input, Button, Space, Image, DatePicker, QRCode, Pagination} from "antd";
 import yamiMaterials from "../apis/yami-materials.ts";
 import dayjs from "dayjs";
 import EditImageMaterialModal from "../components/EditImageMaterialModal.tsx";
@@ -16,6 +16,11 @@ const Material = () => {
   const [openQrModal, setOpenQrModal] = useState(false);
   const [qrValue, setQrValue] = useState('');
   const navigate = useNavigate();
+  const [params, setParams] = useState({
+    page: 0,
+    limit: 50,
+    search: '',
+  });
   useEffect(() => {
     const isLoggedIn = !!localStorage.getItem(ACCESS_TOKEN_KEY);
     if (!isLoggedIn) {
@@ -23,14 +28,13 @@ const Material = () => {
     }
   }, []);
   const [total, setTotal] = useState(0);
-  console.log('total', total);
+
   const [tableData, setTableData] = useState<any[]>([]);
   const [isLoadMaterials, setIsLoadMaterials] = useState(false);
-  const fetchMaterials = async () => {
+  const fetchMaterials = async (params: any) => {
     try {
       setIsLoadMaterials(true);
-      const resp = await yamiMaterials.listMaterials();
-      console.log(resp);
+      const resp = await yamiMaterials.listMaterials(params);
       setTableData(resp.data.map((material: any) => {
         return {
           ...material,
@@ -46,8 +50,8 @@ const Material = () => {
   }
 
   useEffect(() => {
-    fetchMaterials()
-  }, []);
+    fetchMaterials(params)
+  }, [params]);
 
   const handleCellChange = (value: any, key: string, dataIndex: string) => {
     const newData = [...tableData];
@@ -63,7 +67,6 @@ const Material = () => {
       const listCreate = []
       const listUpdate = []
       for (const item of tableData) {
-        console.log(item);
         if (item.key.toString().includes('new')) {
           listCreate.push(item);
         } else {
@@ -73,7 +76,6 @@ const Material = () => {
       //normalize data  //remove key field  and format date
       const listCreateNormalized = listCreate.map((item: any) => {
         const {key, ...rest} = item;
-        console.log({key, rest});
         return {
           ...rest,
           entryDate: dayjs(rest.entryDate).format('YYYY-MM-DD'),
@@ -81,7 +83,6 @@ const Material = () => {
       });
       const listUpdateNormalized = listUpdate.map((item: any) => {
         const {key, createdAt, updatedAt, deletedAt, ...rest} = item;
-        console.log({key, createdAt, updatedAt, deletedAt, rest});
         return {
           ...rest,
           entryDate: dayjs(rest.entryDate).format('YYYY-MM-DD'),
@@ -93,7 +94,7 @@ const Material = () => {
         listUpdate: listUpdateNormalized,
         listDelete,
       })
-      await fetchMaterials();
+      await fetchMaterials(params);
       toast.success('Lưu thành công');
     } catch (err) {
       console.log(err);
@@ -297,7 +298,16 @@ const Material = () => {
   return (
     <div>
       <Flex justify='space-between' style={{marginBottom: 20}}>
-        <Input.Search placeholder='tìm vật tư' style={{width: 250}}/>
+        <Input.Search
+          placeholder='tìm vật tư' style={{width: 250}}
+          onSearch={(value) => {
+            setParams({
+              ...params,
+              page: 0,
+              search: value,
+            })
+          }}
+        />
       </Flex>
       <Table
         loading={isLoadMaterials || loading}
@@ -311,6 +321,19 @@ const Material = () => {
         }}
         pagination={false}
       />
+      <Flex justify='end' style={{marginTop: '20px'}}>
+        <Pagination
+          total={total}
+          pageSize={params.limit}
+          current={params.page + 1}
+          onChange={(page) => {
+            setParams({
+              ...params,
+              page: page - 1,
+            })
+          }}
+        />
+      </Flex>
       <Flex justify='end' style={{marginTop: 20}}>
         <Button
           type='primary'
