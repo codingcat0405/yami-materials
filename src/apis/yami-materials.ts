@@ -19,8 +19,11 @@ const yamiMaterials = {
   getPresignedUrl: async (fileName: string): Promise<any> => {
     return await axiosClient.get(`/upload/presigned-url?file=${fileName}`);
   },
-  bulkCUD: async (data: any): Promise<any> =>{
+  bulkCUD: async (data: any): Promise<any> => {
     return await axiosClient.post('/materials/bulk-cud', data);
+  },
+  getMaterialByStampCode: async (stampCode: string | undefined): Promise<any> => {
+    return await axiosClient.get(`/materials/stamp-code/${stampCode}`);
   }
 
 }

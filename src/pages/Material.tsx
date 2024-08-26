@@ -4,7 +4,7 @@ import {useNavigate} from "react-router-dom";
 import {Flex, Table, Input, Button, Space, Image, DatePicker, QRCode} from "antd";
 import yamiMaterials from "../apis/yami-materials.ts";
 import dayjs from "dayjs";
-import EditMaterialModal from "../components/EditMaterialModal.tsx";
+import EditImageMaterialModal from "../components/EditImageMaterialModal.tsx";
 import toast from "react-hot-toast";
 import QrModal from "../components/QrModal.tsx";
 
@@ -284,6 +284,12 @@ const Material = () => {
             const newData = tableData.filter((item: any) => item.key !== record.key);
             setTableData(newData);
           }}>Xóa</Button>
+
+          <Button type='text' onClick={() => {
+            navigate('/material/' + record.stampCode);
+          }}>
+            Xem
+          </Button>
         </Space>
       )
     }
@@ -337,13 +343,14 @@ const Material = () => {
         </Button>
       </Flex>
 
-      <EditMaterialModal
+      <EditImageMaterialModal
         open={openEditImageModal}
         setOpen={setOpenEditImageModal}
         material={toEditMaterial}
         setTableData={setTableData}
         tableData={tableData}
       />
+
       <QrModal
         open={openQrModal}
         setOpen={setOpenQrModal}
