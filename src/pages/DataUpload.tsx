@@ -1,4 +1,4 @@
-import {Button, Input, InputNumber, Select, Upload} from "antd";
+import {Button,  InputNumber, Select, Upload} from "antd";
 import {useState} from "react";
 import toast from "react-hot-toast";
 import yamiMaterials from "../apis/yami-materials.ts";
@@ -122,7 +122,7 @@ const DataUpload = () => {
         <h4>Start Row</h4>
         <InputNumber
           value={startRow}
-          onChange={(e) => {
+          onChange={(e: any) => {
             setStartRow(e)
           }}
         />
