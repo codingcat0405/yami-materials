@@ -24,6 +24,9 @@ const yamiMaterials = {
   },
   getMaterialByStampCode: async (stampCode: string | undefined): Promise<any> => {
     return await axiosClient.get(`/materials/stamp-code/${stampCode}`);
+  },
+  syncExcelData: async (data: any): Promise<any> => {
+    return  await axiosClient.post('/materials/sync-excel', data);
   }
 
 }

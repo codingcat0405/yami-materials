@@ -6,6 +6,7 @@ import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
 import {Toaster} from "react-hot-toast";
 import './App.css';
 import MaterialDetail from "./pages/MaterialDetail.tsx";
+import DataUpload from "./pages/DataUpload.tsx";
 
 const queryClient = new QueryClient();
 const App = () => {
@@ -16,6 +17,7 @@ const App = () => {
         <Routes>
           <Route element={<AdminLayout/>}>
             <Route path="/" element={<Material/>}/>
+            <Route path="/upload" element={<DataUpload/>}/>
           </Route>
           <Route path="/login" element={<Login/>}/>
           <Route path="/material/:stampCode" element={<MaterialDetail/>}/>

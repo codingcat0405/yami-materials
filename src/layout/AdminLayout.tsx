@@ -5,7 +5,8 @@ import {
 } from '@ant-design/icons';
 import {Button, Layout, Menu, theme} from 'antd';
 import {SiMaterialdesignicons} from "react-icons/si";
-import {Outlet} from "react-router-dom";
+import {Outlet, useNavigate} from "react-router-dom";
+import {AiOutlineCloudUpload} from "react-icons/ai";
 
 
 const {Header, Sider, Content} = Layout;
@@ -15,6 +16,7 @@ const AdminLayout = () => {
   const {
     token: {colorBgContainer, borderRadiusLG},
   } = theme.useToken();
+  const navigate = useNavigate();
 
   return (
     <Layout>
@@ -24,11 +26,24 @@ const AdminLayout = () => {
           theme="dark"
           mode="inline"
           defaultSelectedKeys={['1']}
+          onClick={(e) => {
+            if (e.key === '1') {
+              navigate('/');
+            }
+            if (e.key === '2') {
+              navigate('/upload');
+            }
+          }}
           items={[
             {
               key: '1',
               icon: <SiMaterialdesignicons/>,
               label: 'Vật tư',
+            },
+            {
+              key: '2',
+              icon: <AiOutlineCloudUpload/>,
+              label: 'Upload data',
             }
           ]}
         />
