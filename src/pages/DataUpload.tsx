@@ -1,7 +1,9 @@
-import {Button,  InputNumber, Select, Upload} from "antd";
+import {Button, Input, InputNumber, Select, Upload} from "antd";
 import {useState} from "react";
 import toast from "react-hot-toast";
 import yamiMaterials from "../apis/yami-materials.ts";
+//@ts-ignore
+import {OutTable, ExcelRenderer} from "react-excel-renderer";
 
 const ALLOWED_TYPES = [
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -48,8 +50,20 @@ const DataUpload = () => {
   const [dataMap, setDataMap] = useState<any>(null);
   const [startRow, setStartRow] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [previewData, setPreviewData] = useState<any>({
+    cols: [],
+    rows: [],
+  });
   const handleChooseFile = ({file}: any) => {
     setFile(file);
+    console.log('file', file)
+    ExcelRenderer(file.originFileObj, (err: any, resp: any) => {
+      if (err) {
+        console.log(err);
+      } else {
+        setPreviewData(resp);
+      }
+    });
   }
 
   const handleUpload = async () => {
@@ -119,6 +133,14 @@ const DataUpload = () => {
         </Upload.Dragger>
       </div>
       <div>
+        <OutTable
+          data={previewData.rows}
+          columns={previewData.cols}
+          tableClassName="table"
+          tableHeaderRowClass="heading"
+        />
+      </div>
+      <div>
         <h4>Start Row</h4>
         <InputNumber
           value={startRow}
@@ -132,7 +154,7 @@ const DataUpload = () => {
         {
           dataMapping.map((item) => {
             return (
-              <div style={{margin: '10px 0'}} key={item.key}>
+              <div style={{margin: '10px 0', display: 'flex', gap: "20px"}} key={item.key}>
                 <label>{item.label}: </label>
                 <Select
                   style={{width: 200}}
@@ -141,6 +163,16 @@ const DataUpload = () => {
                     setDataMap({
                       ...dataMap,
                       [item.key]: value
+                    })
+                  }}
+                />
+                <label>Giá trị mặc định: </label>
+                <Input
+                  style={{width: 200}}
+                  onChange={(e) => {
+                    setDataMap({
+                      ...dataMap,
+                      [item.key.replace('Col', 'Default')]: e.target.value
                     })
                   }}
                 />

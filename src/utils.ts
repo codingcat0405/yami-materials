@@ -16,4 +16,29 @@ export function uuidv4() {
   );
 }
 
+export function toIndexColName(colName: string) {
+  const ordA = 'a'.charCodeAt(0);
+  const ordZ = 'z'.charCodeAt(0);
+  const len = ordZ - ordA + 1;
+
+  let n = 0;
+  for (let i = 0; i < colName.length; i++) {
+    n = n * len + colName.charCodeAt(i) - ordA;
+  }
+  return n;
+}
+
+export function toExcelColName(n: number) {
+  const ordA = 'a'.charCodeAt(0);
+  const ordZ = 'z'.charCodeAt(0);
+  const len = ordZ - ordA + 1;
+
+  let s = "";
+  while (n >= 0) {
+    s = String.fromCharCode(n % len + ordA) + s;
+    n = Math.floor(n / len) - 1;
+  }
+  return s.toUpperCase();
+}
+
 

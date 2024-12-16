@@ -60,6 +60,7 @@ const Material = () => {
     newData.splice(index, 1, {...item, [dataIndex]: value});
     setTableData(newData);
   }
+  console.log('tableData', tableData);
 
   const handleSaveMaterials = async () => {
     try {
@@ -247,7 +248,7 @@ const Material = () => {
       dataIndex: 'images',
       key: 'images',
       render: (images: string, record: any) => {
-        const imagesArr = images.split(',').filter(x => !!x);
+        const imagesArr = images?.split(',')?.filter(x => !!x) ?? [];
         return (
           <Space>
             {
